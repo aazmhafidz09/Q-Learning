@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playground Soal Q-Learning</title>
+  <style>
+    :root {
+      --ink: #132238;
+      --muted: #5d6b7a;
+      --line: #d8e0e8;
+      --paper: #f7fafc;
+      --panel: #ffffff;
+      --blue: #0b5d8e;
+      --blue-soft: #e6f3fb;
+      --teal: #159e9a;
+      --amber: #f6b739;
+      --rose: #ca426b;
+      --green: #17815f;
+      --red: #b93342;
+      --shadow: 0 10px 28px rgba(19, 34, 56, 0.08);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, #eef7fb 0, rgba(238, 247, 251, 0) 320px),
+        var(--paper);
+      line-height: 1.5;
+    }
+
+    header {
+      border-bottom: 4px solid var(--blue);
+      background: #ffffff;
+    }
+
+    .topbar {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 26px 0 22px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 56px);
+      line-height: 1;
+      letter-spacing: 0;
+      color: var(--blue);
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .scorebox {
+      min-width: 172px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      background: var(--paper);
+      text-align: right;
+    }
+
+    .scorebox strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.1;
+      color: var(--teal);
+    }
+
+    .scorebox span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 28px auto 44px;
+      display: grid;
+      gap: 18px;
+    }
+
+    section,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    section {
+      padding: 22px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--ink);
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid #b9c6d2;
+      border-radius: 6px;
+      padding: 10px 11px;
+      background: #ffffff;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(11, 93, 142, 0.14);
+    }
+
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+    }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 10px 13px;
+      background: var(--blue);
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s, background 0.12s, border-color 0.12s;
+    }
+
+    button:hover {
+      background: #084c74;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.secondary {
+      background: #ffffff;
+      color: var(--blue);
+      border-color: #a7bdd0;
+    }
+
+    button.secondary:hover {
+      background: var(--blue-soft);
+    }
+
+    button.warn {
+      background: #ffffff;
+      color: var(--rose);
+      border-color: #e3b4c5;
+    }
+
+    button.warn:hover {
+      background: #fff1f5;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .identity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .note {
+      border-left: 4px solid var(--amber);
+      background: #fff8e8;
+      padding: 12px 14px;
+      border-radius: 0 6px 6px 0;
+      color: #72511b;
+      margin-top: 12px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+      counter-reset: step;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      align-items: center;
+      min-height: 42px;
+    }
+
+    .bubble {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #39485a;
+      background: #ffffff;
+      border: 5px solid var(--teal);
+      box-shadow: inset 0 0 0 2px #e6eef5;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .step:nth-child(3n + 1) .bubble {
+      border-color: var(--amber);
+    }
+
+    .step:nth-child(3n + 2) .bubble {
+      border-color: #11a8df;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--ink);
+      font-size: 16px;
+    }
+
+    .diagram-wrap {
+      padding: 16px;
+      background: #f8fbfd;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .diagram-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      flex: 0 0 auto;
+    }
+
+    .matrix-shell {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #e2e9ef;
+      text-align: center;
+      padding: 7px;
+      min-width: 54px;
+    }
+
+    th {
+      background: #edf5fa;
+      color: #27445f;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    td input {
+      text-align: center;
+      padding: 8px 4px;
+      min-width: 46px;
+    }
+
+    .mini-input {
+      max-width: 160px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .feedback {
+      margin-top: 10px;
+      font-weight: 700;
+      min-height: 24px;
+    }
+
+    .feedback.good {
+      color: var(--green);
+    }
+
+    .feedback.bad {
+      color: var(--red);
+    }
+
+    .field-ok {
+      border-color: var(--green) !important;
+      background: #eefaf5 !important;
+    }
+
+    .field-bad {
+      border-color: var(--red) !important;
+      background: #fff2f4 !important;
+    }
+
+    .exercise-table td:first-child,
+    .exercise-table th:first-child {
+      min-width: 110px;
+      text-align: left;
+    }
+
+    .exercise-table input {
+      min-width: 92px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .calc-card,
+    .stage-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .calc-card h3,
+    .stage-card h3 {
+      margin: 0;
+      padding: 13px 15px;
+      background: #edf5fa;
+      color: #27445f;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .calc-body {
+      padding: 14px 15px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .fact-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .fact {
+      border: 1px solid #d6e2ec;
+      border-radius: 6px;
+      padding: 8px;
+      background: #f8fbfd;
+      min-width: 0;
+    }
+
+    .fact span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .fact strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 18px;
+      color: var(--ink);
+    }
+
+    .formula-box {
+      border-left: 4px solid var(--blue);
+      background: #f3f8fc;
+      padding: 10px 12px;
+      border-radius: 0 6px 6px 0;
+      color: #27445f;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      white-space: normal;
+    }
+
+    .calc-input-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .calc-input-grid label {
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .formula-inputs {
+      display: grid;
+      gap: 8px;
+    }
+
+    .stage-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stage-note {
+      margin: 0;
+      padding: 12px 15px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stage-card .matrix-shell {
+      border: 0;
+      border-radius: 0;
+    }
+
+    .stage-card td.updated-cell {
+      background: #fff4d8;
+      color: #7b5200;
+      font-weight: 800;
+      box-shadow: inset 0 0 0 2px rgba(246, 183, 57, 0.45);
+    }
+
+    .stage-card td.updated-cell input {
+      border-color: #d49a00;
+      background: #fffaf0;
+      font-weight: 800;
+    }
+
+    .playground {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .control-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .result-box {
+      border: 1px solid #bdd6e7;
+      background: #f2f8fc;
+      border-radius: var(--radius);
+      padding: 14px;
+      min-height: 112px;
+      color: #27445f;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .footer-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
+      background: rgba(247, 250, 252, 0.94);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--line);
+      padding: 14px 0;
+    }
+
+    .footer-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .save-state {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .topbar,
+      .grid-2,
+      .playground,
+      .detail-grid,
+      .answer-grid,
+      .identity-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .scorebox {
+        text-align: left;
+      }
+
+      section {
+        padding: 18px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .legend,
+      .fact-row,
+      .calc-input-grid,
+      .control-row {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar,
+      main,
+      .footer-inner {
+        width: min(100% - 20px, 1180px);
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .footer-actions,
+      .toolbar button,
+      .playground button {
+        display: none;
+      }
+
+      section,
+      .panel {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <h1>Q-Learning Algorithm</h1>
+        <p class="subtitle">Playground soal untuk mahasiswa: isi parameter, matriks reward, matriks Q awal, dan hitung beberapa update Q-Learning berdasarkan lingkungan 6 state.</p>
+      </div>
+      <div class="scorebox" aria-live="polite">
+        <strong id="scoreValue">0/0</strong>
+        <span>skor terakhir</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Identitas</h2>
+      <div class="identity-grid">
+        <label>
+          Nama mahasiswa
+          <input id="studentName" data-save placeholder="Tulis nama">
+        </label>
+        <label>
+          NIM
+          <input id="studentId" data-save placeholder="Tulis NIM">
+        </label>
+        <label>
+          Kelas
+          <input id="studentClass" data-save placeholder="Contoh: TI-3A">
+        </label>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div>
+        <h2>Soal</h2>
+        <p>Robot berada pada lingkungan berisi state 0 sampai 5. State 5 adalah goal. Mahasiswa diminta menyusun komponen Q-Learning berdasarkan diagram, lalu menghitung nilai Q untuk episode latihan.</p>
+        <div class="note">
+          Gunakan nilai reward -1 untuk aksi yang tidak valid, 0 untuk perpindahan valid biasa, dan 100 untuk perpindahan yang mencapai goal.
+        </div>
+      </div>
+
+      <div class="diagram-wrap">
+        <div class="diagram-title">
+          <span>Lingkungan state</span>
+          <span>Goal: 5</span>
+        </div>
+        <svg viewBox="0 0 560 330" role="img" aria-label="Diagram lingkungan enam state untuk Q-Learning">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#5d6b7a"></path>
+            </marker>
+            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#132238" flood-opacity="0.14"></feDropShadow>
+            </filter>
+          </defs>
+
+          <g stroke="#5d6b7a" stroke-width="3" fill="none" marker-end="url(#arrow)">
+            <path d="M112 174 C139 144, 161 124, 190 102"></path>
+            <path d="M208 91 C248 72, 292 72, 332 92"></path>
+            <path d="M357 111 C374 140, 382 174, 377 208"></path>
+            <path d="M362 235 C319 263, 256 264, 212 236"></path>
+            <path d="M188 218 C158 202, 137 190, 112 174"></path>
+            <path d="M381 222 C416 213, 445 200, 477 177"></path>
+            <path d="M477 153 C444 128, 413 113, 372 102"></path>
+            <path d="M202 221 C232 193, 264 166, 296 140"></path>
+            <path d="M340 121 C304 151, 271 181, 210 222"></path>
+            <path d="M474 176 C448 220, 427 251, 398 278"></path>
+            <path d="M391 280 C417 266, 461 226, 493 175"></path>
+            <path d="M501 151 C529 115, 522 84, 492 77 C464 70, 443 92, 454 122" stroke="#159e9a"></path>
+          </g>
+
+          <g filter="url(#softShadow)" font-family="Inter, Arial, sans-serif" font-weight="800" font-size="24" text-anchor="middle">
+            <g>
+              <circle cx="92" cy="185" r="34" fill="#ffffff" stroke="#0b5d8e" stroke-width="6"></circle>
+              <text x="92" y="194" fill="#132238">0</text>
+            </g>
+            <g>
+              <circle cx="200" cy="90" r="34" fill="#ffffff" stroke="#f6b739" stroke-width="6"></circle>
+              <text x="200" y="99" fill="#132238">1</text>
+            </g>
+            <g>
+              <circle cx="356" cy="90" r="34" fill="#ffffff" stroke="#0b5d8e" stroke-width="6"></circle>
+              <text x="356" y="99" fill="#132238">2</text>
+            </g>
+            <g>
+              <circle cx="382" cy="235" r="34" fill="#ffffff" stroke="#ca426b" stroke-width="6"></circle>
+              <text x="382" y="244" fill="#132238">3</text>
+            </g>
+            <g>
+              <circle cx="194" cy="235" r="34" fill="#ffffff" stroke="#159e9a" stroke-width="6"></circle>
+              <text x="194" y="244" fill="#132238">4</text>
+            </g>
+            <g>
+              <circle cx="496" cy="166" r="38" fill="#ffffff" stroke="#17815f" stroke-width="7"></circle>
+              <text x="496" y="175" fill="#132238">5</text>
+            </g>
+          </g>
+        </svg>
+        <div class="legend">
+          <span><i class="swatch" style="background: var(--green);"></i>goal</span>
+          <span><i class="swatch" style="background: var(--teal);"></i>valid action</span>
+          <span><i class="swatch" style="background: var(--amber);"></i>state awal acak</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Langkah Algoritma</h2>
+      <div class="steps" aria-label="Langkah algoritma Q-Learning">
+        <div class="step"><div class="bubble">1</div><p>Set parameter gamma dan reward lingkungan pada matriks R.</p></div>
+        <div class="step"><div class="bubble">2</div><p>Inisialisasi matriks Q dengan nilai nol.</p></div>
+        <div class="step"><div class="bubble">3</div><p>Pilih initial state secara acak.</p></div>
+        <div class="step"><div class="bubble">4</div><p>Jadikan initial state sebagai current state.</p></div>
+        <div class="step"><div class="bubble">5</div><p>Pilih satu aksi yang mungkin dari current state.</p></div>
+        <div class="step"><div class="bubble">6</div><p>Gunakan aksi tersebut untuk menuju next state.</p></div>
+        <div class="step"><div class="bubble">7</div><p>Ambil nilai Q maksimum dari next state untuk semua aksi yang mungkin.</p></div>
+        <div class="step"><div class="bubble">8</div><p>Hitung Q(state, action) = R(state, action) + gamma * max Q(next state, semua aksi).</p></div>
+        <div class="step"><div class="bubble">9</div><p>Ulangi proses sampai current state sama dengan goal state.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Bagian A: Parameter</h2>
+      <p>Isi gamma sesuai instruksi dosen untuk latihan ini.</p>
+      <label class="mini-input">
+        Gamma
+        <input id="gamma" data-save data-answer="0.8" type="number" step="0.01" placeholder="0.8">
+      </label>
+    </section>
+
+    <section>
+      <h2>Bagian B: Matriks Reward R</h2>
+      <p>Isi matriks R berdasarkan diagram lingkungan. Baris adalah current state, kolom adalah action atau next state.</p>
+      <div class="matrix-shell" id="rewardMatrix"></div>
+      <div class="toolbar">
+        <button class="secondary" id="clearR" type="button">Kosongkan R</button>
+      </div>
+      <div class="feedback" id="rewardFeedback"></div>
+    </section>
+
+    <section>
+      <h2>Bagian C: Matriks Q Awal</h2>
+      <p>Isi matriks Q awal sebelum proses pembelajaran dimulai.</p>
+      <div class="matrix-shell" id="qInitialMatrix"></div>
+      <div class="toolbar">
+        <button class="secondary" id="fillQZero" type="button">Isi Semua Nol</button>
+        <button class="secondary" id="clearQInitial" type="button">Kosongkan Q Awal</button>
+      </div>
+      <div class="feedback" id="qInitialFeedback"></div>
+    </section>
+
+    <section>
+      <h2>Bagian D: Hitung Update Q</h2>
+      <p>Gunakan gamma = 0.8 dan Q awal bernilai nol. Hitung berurutan dari baris 1 sampai 5, sehingga hasil pada baris sebelumnya boleh memengaruhi max Q pada baris berikutnya.</p>
+      <div class="matrix-shell">
+        <table class="exercise-table">
+          <thead>
+            <tr>
+              <th>Langkah</th>
+              <th>State</th>
+              <th>Action</th>
+              <th>Next state</th>
+              <th>Reward</th>
+              <th>Max Q next</th>
+              <th>Q baru</th>
+            </tr>
+          </thead>
+          <tbody id="episodeRows"></tbody>
+        </table>
+      </div>
+      <div class="feedback" id="episodeFeedback"></div>
+    </section>
+
+    <section>
+      <h2>Bagian E: Cara Hitung Tiap Langkah</h2>
+      <p>Lengkapi perhitungan setiap langkah. Gunakan rumus Q(state, action) = R(state, action) + gamma * max Q(next state), dengan gamma = 0.8.</p>
+      <div class="detail-grid" id="calculationDetails"></div>
+      <div class="feedback" id="calculationFeedback"></div>
+    </section>
+
+    <section>
+      <h2>Bagian F: Matriks Q Hasil Update</h2>
+      <p>Isi matriks Q awal dan matriks Q setelah setiap langkah update. Sel kuning menunjukkan posisi Q yang berubah pada langkah tersebut.</p>
+      <div class="stage-list" id="qStageMatrices"></div>
+      <div class="feedback" id="qStageFeedback"></div>
+    </section>
+
+    <section>
+      <h2>Playground Bebas</h2>
+      <div class="playground">
+        <div class="control-stack">
+          <div class="control-row">
+            <label>
+              Current state
+              <select id="currentState"></select>
+            </label>
+            <label>
+              Action
+              <select id="actionState"></select>
+            </label>
+          </div>
+          <label>
+            Gamma playground
+            <input id="playGamma" type="number" step="0.01" value="0.8">
+          </label>
+          <div class="toolbar">
+            <button id="calculateStep" type="button">Hitung Satu Langkah</button>
+            <button class="secondary" id="applyStep" type="button">Terapkan ke Q Kerja</button>
+            <button class="secondary" id="resetWorkQ" type="button">Reset Q Kerja</button>
+          </div>
+          <div class="result-box" id="playResult">Pilih state dan action, lalu hitung satu langkah Q-Learning.</div>
+        </div>
+        <div>
+          <h3>Matriks Q Kerja</h3>
+          <div class="matrix-shell" id="workQMatrix"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Bagian G: Jawaban Singkat</h2>
+      <div class="answer-grid">
+        <label>
+          Jelaskan mengapa nilai max Q dari next state dibutuhkan.
+          <textarea id="essay1" data-save placeholder="Tulis jawaban singkat"></textarea>
+        </label>
+        <label>
+          Jika gamma makin besar, apa dampaknya pada pembelajaran?
+          <textarea id="essay2" data-save placeholder="Tulis jawaban singkat"></textarea>
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer-actions">
+    <div class="footer-inner">
+      <span class="save-state" id="saveState">Jawaban tersimpan di browser.</span>
+      <div class="actions">
+        <button id="checkAll" type="button">Cek Jawaban</button>
+        <button class="secondary" id="downloadAnswers" type="button">Unduh Jawaban</button>
+        <button class="secondary" id="printPage" type="button">Cetak</button>
+        <button class="warn" id="resetAll" type="button">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const size = 6;
+    const saveKey = "q-learning-playground-v1";
+    const expectedR = [
+      [-1, -1, -1, -1, 0, -1],
+      [-1, -1, -1, 0, -1, 100],
+      [-1, -1, -1, 0, -1, -1],
+      [-1, 0, 0, -1, 0, -1],
+      [0, -1, -1, 0, -1, 100],
+      [-1, 0, -1, -1, 0, 100]
+    ];
+    const episode = [
+      { label: "1", state: 5, action: 5, next: 5, reward: 100, maxQ: 0, qNew: 100 },
+      { label: "2", state: 4, action: 5, next: 5, reward: 100, maxQ: 100, qNew: 180 },
+      { label: "3", state: 3, action: 4, next: 4, reward: 0, maxQ: 180, qNew: 144 },
+      { label: "4", state: 1, action: 3, next: 3, reward: 0, maxQ: 144, qNew: 115.2 },
+      { label: "5", state: 2, action: 3, next: 3, reward: 0, maxQ: 144, qNew: 115.2 }
+    ];
+
+    let workQ = createZeroMatrix();
+    let lastCandidate = null;
+
+    function createZeroMatrix() {
+      return Array.from({ length: size }, () => Array(size).fill(0));
+    }
+
+    function buildEditableMatrix(containerId, prefix, expectedMatrix) {
+      const container = document.getElementById(containerId);
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const header = document.createElement("tr");
+      header.appendChild(document.createElement("th"));
+      for (let c = 0; c < size; c += 1) {
+        const th = document.createElement("th");
+        th.textContent = "A" + c;
+        header.appendChild(th);
+      }
+      thead.appendChild(header);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      for (let r = 0; r < size; r += 1) {
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.textContent = "S" + r;
+        tr.appendChild(th);
+        for (let c = 0; c < size; c += 1) {
+          const td = document.createElement("td");
+          const input = document.createElement("input");
+          input.type = "number";
+          input.step = "0.01";
+          input.id = prefix + "_" + r + "_" + c;
+          input.dataset.save = "true";
+          input.dataset.matrix = prefix;
+          input.dataset.row = String(r);
+          input.dataset.col = String(c);
+          if (expectedMatrix) {
+            input.dataset.answer = String(expectedMatrix[r][c]);
+          }
+          input.setAttribute("aria-label", prefix + " baris " + r + " kolom " + c);
+          td.appendChild(input);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      container.replaceChildren(table);
+    }
+
+    function buildReadonlyMatrix(containerId, matrix) {
+      const container = document.getElementById(containerId);
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const header = document.createElement("tr");
+      header.appendChild(document.createElement("th"));
+      for (let c = 0; c < size; c += 1) {
+        const th = document.createElement("th");
+        th.textContent = "A" + c;
+        header.appendChild(th);
+      }
+      thead.appendChild(header);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      for (let r = 0; r < size; r += 1) {
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.textContent = "S" + r;
+        tr.appendChild(th);
+        for (let c = 0; c < size; c += 1) {
+          const td = document.createElement("td");
+          td.textContent = formatNumber(matrix[r][c]);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      container.replaceChildren(table);
+    }
+
+    function cloneMatrix(matrix) {
+      return matrix.map((row) => row.slice());
+    }
+
+    function buildStageMatrixInputs(matrix, updatedCell, prefix) {
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const header = document.createElement("tr");
+      header.appendChild(document.createElement("th"));
+      for (let c = 0; c < size; c += 1) {
+        const th = document.createElement("th");
+        th.textContent = "A" + c;
+        header.appendChild(th);
+      }
+      thead.appendChild(header);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      for (let r = 0; r < size; r += 1) {
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.textContent = "S" + r;
+        tr.appendChild(th);
+        for (let c = 0; c < size; c += 1) {
+          const td = document.createElement("td");
+          if (updatedCell && updatedCell.row === r && updatedCell.col === c) {
+            td.classList.add("updated-cell");
+          }
+          const input = document.createElement("input");
+          input.type = "number";
+          input.step = "0.01";
+          input.id = prefix + "_" + r + "_" + c;
+          input.dataset.save = "true";
+          input.dataset.stageMatrix = prefix;
+          input.dataset.answer = String(matrix[r][c]);
+          input.setAttribute("aria-label", prefix + " baris " + r + " kolom " + c);
+          td.appendChild(input);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      return table;
+    }
+
+    function getEpisodeStages() {
+      const stages = [];
+      const matrix = createZeroMatrix();
+      episode.forEach((row) => {
+        const maxQ = Math.max(...matrix[row.next]);
+        const qNew = row.reward + 0.8 * maxQ;
+        matrix[row.state][row.action] = qNew;
+        stages.push({
+          ...row,
+          computedMaxQ: maxQ,
+          computedQNew: qNew,
+          matrix: cloneMatrix(matrix),
+          updatedCell: { row: row.state, col: row.action }
+        });
+      });
+      return stages;
+    }
+
+    function buildCalculationDetails() {
+      const container = document.getElementById("calculationDetails");
+      container.replaceChildren();
+      getEpisodeStages().forEach((stage, index) => {
+        const card = document.createElement("article");
+        card.className = "calc-card";
+
+        const title = document.createElement("h3");
+        title.textContent = "Langkah " + stage.label + ": update Q(" + stage.state + "," + stage.action + ")";
+        card.appendChild(title);
+
+        const body = document.createElement("div");
+        body.className = "calc-body";
+
+        const facts = document.createElement("div");
+        facts.className = "fact-row";
+        [
+          ["State", stage.state],
+          ["Action", stage.action],
+          ["Next state", stage.next]
+        ].forEach(([label, value]) => {
+          const fact = document.createElement("div");
+          fact.className = "fact";
+          const small = document.createElement("span");
+          small.textContent = label;
+          const strong = document.createElement("strong");
+          strong.textContent = formatNumber(value);
+          fact.append(small, strong);
+          facts.appendChild(fact);
+        });
+
+        const formula = document.createElement("div");
+        formula.className = "formula-box";
+        formula.textContent = "Q(" + stage.state + "," + stage.action + ") = R(" + stage.state + "," + stage.action + ") + 0.8 * max Q(S" + stage.next + ")";
+
+        const inputs = document.createElement("div");
+        inputs.className = "calc-input-grid";
+        [
+          ["Reward", "reward", stage.reward],
+          ["Max Q next", "maxQ", stage.computedMaxQ],
+          ["Q baru", "qNew", stage.computedQNew]
+        ].forEach(([label, field, answer]) => {
+          const labelEl = document.createElement("label");
+          labelEl.textContent = label;
+          const input = document.createElement("input");
+          input.type = "number";
+          input.step = "0.01";
+          input.id = "calc_" + index + "_" + field;
+          input.dataset.save = "true";
+          input.dataset.calc = "true";
+          input.dataset.answer = String(answer);
+          input.setAttribute("aria-label", "Perhitungan langkah " + stage.label + " " + label);
+          labelEl.appendChild(input);
+          inputs.appendChild(labelEl);
+        });
+
+        body.append(facts, formula, inputs);
+        card.appendChild(body);
+        container.appendChild(card);
+      });
+    }
+
+    function buildQStageMatrices() {
+      const container = document.getElementById("qStageMatrices");
+      container.replaceChildren();
+
+      const initialCard = document.createElement("article");
+      initialCard.className = "stage-card";
+      const initialTitle = document.createElement("h3");
+      initialTitle.textContent = "Q Awal";
+      const initialNote = document.createElement("p");
+      initialNote.className = "stage-note";
+      initialNote.textContent = "Isi matriks Q awal sebelum update pertama.";
+      const initialShell = document.createElement("div");
+      initialShell.className = "matrix-shell";
+      initialShell.appendChild(buildStageMatrixInputs(createZeroMatrix(), null, "stage_0"));
+      initialCard.append(initialTitle, initialNote, initialShell);
+      container.appendChild(initialCard);
+
+      getEpisodeStages().forEach((stage, index) => {
+        const card = document.createElement("article");
+        card.className = "stage-card";
+        const title = document.createElement("h3");
+        title.textContent = "Setelah Langkah " + stage.label;
+
+        const note = document.createElement("p");
+        note.className = "stage-note";
+        note.textContent = "Isi matriks setelah update Q(" + stage.state + "," + stage.action + ").";
+
+        const shell = document.createElement("div");
+        shell.className = "matrix-shell";
+        shell.appendChild(buildStageMatrixInputs(stage.matrix, stage.updatedCell, "stage_" + (index + 1)));
+
+        card.append(title, note, shell);
+        container.appendChild(card);
+      });
+    }
+
+    function buildEpisodeRows() {
+      const tbody = document.getElementById("episodeRows");
+      tbody.replaceChildren();
+      episode.forEach((row, index) => {
+        const tr = document.createElement("tr");
+        const fixed = [row.label, row.state, row.action, row.next];
+        fixed.forEach((value) => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        ["reward", "maxQ", "qNew"].forEach((field) => {
+          const td = document.createElement("td");
+          const input = document.createElement("input");
+          input.type = "number";
+          input.step = "0.01";
+          input.id = "ep_" + index + "_" + field;
+          input.dataset.save = "true";
+          input.dataset.answer = String(row[field]);
+          input.setAttribute("aria-label", "Episode " + row.label + " " + field);
+          td.appendChild(input);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function buildStateOptions() {
+      const selects = [document.getElementById("currentState"), document.getElementById("actionState")];
+      selects.forEach((select) => {
+        select.replaceChildren();
+        for (let i = 0; i < size; i += 1) {
+          const option = document.createElement("option");
+          option.value = String(i);
+          option.textContent = String(i);
+          select.appendChild(option);
+        }
+      });
+      document.getElementById("currentState").value = "4";
+      document.getElementById("actionState").value = "5";
+    }
+
+    function getInputValue(id) {
+      const value = document.getElementById(id).value.trim();
+      if (value === "") return NaN;
+      return Number(value);
+    }
+
+    function readMatrix(prefix) {
+      const matrix = createZeroMatrix();
+      for (let r = 0; r < size; r += 1) {
+        for (let c = 0; c < size; c += 1) {
+          matrix[r][c] = getInputValue(prefix + "_" + r + "_" + c);
+        }
+      }
+      return matrix;
+    }
+
+    function markField(input, isCorrect) {
+      input.classList.remove("field-ok", "field-bad");
+      input.classList.add(isCorrect ? "field-ok" : "field-bad");
+    }
+
+    function clearMarks() {
+      document.querySelectorAll("input, textarea").forEach((input) => {
+        input.classList.remove("field-ok", "field-bad");
+      });
+      document.querySelectorAll(".feedback").forEach((item) => {
+        item.className = "feedback";
+        item.textContent = "";
+      });
+    }
+
+    function approxEqual(actual, expected) {
+      return Number.isFinite(actual) && Math.abs(actual - expected) <= 0.01;
+    }
+
+    function checkTaggedInputs(selector) {
+      let correct = 0;
+      let total = 0;
+      document.querySelectorAll(selector).forEach((input) => {
+        if (!("answer" in input.dataset)) return;
+        total += 1;
+        const isCorrect = approxEqual(Number(input.value), Number(input.dataset.answer));
+        if (isCorrect) correct += 1;
+        markField(input, isCorrect);
+      });
+      return { correct, total };
+    }
+
+    function setFeedback(id, correct, total, label) {
+      const item = document.getElementById(id);
+      item.textContent = label + ": " + correct + " dari " + total + " benar.";
+      item.classList.add(correct === total ? "good" : "bad");
+    }
+
+    function checkAllAnswers() {
+      clearMarks();
+      const gammaScore = checkTaggedInputs("#gamma");
+      const rewardScore = checkTaggedInputs("[data-matrix='r']");
+      const qScore = checkTaggedInputs("[data-matrix='q0']");
+      const episodeScore = checkTaggedInputs("#episodeRows input");
+      const calculationScore = checkTaggedInputs("[data-calc='true']");
+      const qStageScore = checkTaggedInputs("[data-stage-matrix]");
+
+      setFeedback("rewardFeedback", rewardScore.correct, rewardScore.total, "Matriks R");
+      setFeedback("qInitialFeedback", qScore.correct, qScore.total, "Matriks Q awal");
+      setFeedback("episodeFeedback", episodeScore.correct, episodeScore.total, "Episode update");
+      setFeedback("calculationFeedback", calculationScore.correct, calculationScore.total, "Cara hitung");
+      setFeedback("qStageFeedback", qStageScore.correct, qStageScore.total, "Matriks Q hasil update");
+
+      const correct = gammaScore.correct + rewardScore.correct + qScore.correct + episodeScore.correct + calculationScore.correct + qStageScore.correct;
+      const total = gammaScore.total + rewardScore.total + qScore.total + episodeScore.total + calculationScore.total + qStageScore.total;
+      document.getElementById("scoreValue").textContent = correct + "/" + total;
+      saveAnswers();
+    }
+
+    function fillMatrix(prefix, value) {
+      for (let r = 0; r < size; r += 1) {
+        for (let c = 0; c < size; c += 1) {
+          document.getElementById(prefix + "_" + r + "_" + c).value = value;
+        }
+      }
+      saveAnswers();
+    }
+
+    function clearMatrix(prefix) {
+      for (let r = 0; r < size; r += 1) {
+        for (let c = 0; c < size; c += 1) {
+          document.getElementById(prefix + "_" + r + "_" + c).value = "";
+        }
+      }
+      saveAnswers();
+    }
+
+    function calculateCandidate() {
+      const state = Number(document.getElementById("currentState").value);
+      const action = Number(document.getElementById("actionState").value);
+      const gamma = Number(document.getElementById("playGamma").value);
+      const rewardMatrix = readMatrix("r");
+      const reward = rewardMatrix[state][action];
+      const result = document.getElementById("playResult");
+
+      if (!Number.isFinite(gamma)) {
+        result.textContent = "Gamma playground belum valid.";
+        lastCandidate = null;
+        return;
+      }
+      if (!Number.isFinite(reward)) {
+        result.textContent = "Reward untuk kombinasi state dan action tersebut belum diisi pada matriks R.";
+        lastCandidate = null;
+        return;
+      }
+      if (reward < 0) {
+        result.textContent = "Aksi S" + state + " ke A" + action + " tidak valid karena reward bernilai " + reward + ".";
+        lastCandidate = null;
+        return;
+      }
+
+      const maxQ = Math.max(...workQ[action]);
+      const qNew = reward + gamma * maxQ;
+      lastCandidate = { state, action, reward, maxQ, qNew };
+      result.innerHTML =
+        "Q(S" + state + ", A" + action + ") = R(S" + state + ", A" + action + ") + gamma * max Q(S" + action + ")<br>" +
+        "= " + formatNumber(reward) + " + " + formatNumber(gamma) + " * " + formatNumber(maxQ) + "<br>" +
+        "= <strong>" + formatNumber(qNew) + "</strong>";
+    }
+
+    function applyCandidate() {
+      if (!lastCandidate) {
+        calculateCandidate();
+      }
+      if (!lastCandidate) return;
+      workQ[lastCandidate.state][lastCandidate.action] = lastCandidate.qNew;
+      buildReadonlyMatrix("workQMatrix", workQ);
+      saveAnswers();
+    }
+
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) return "";
+      const rounded = Math.round(value * 100) / 100;
+      return String(rounded);
+    }
+
+    function collectAnswers() {
+      const data = {};
+      document.querySelectorAll("[data-save]").forEach((input) => {
+        data[input.id] = input.value;
+      });
+      data.workQ = workQ;
+      data.playGamma = document.getElementById("playGamma").value;
+      data.currentState = document.getElementById("currentState").value;
+      data.actionState = document.getElementById("actionState").value;
+      return data;
+    }
+
+    function saveAnswers() {
+      const data = collectAnswers();
+      localStorage.setItem(saveKey, JSON.stringify(data));
+      const state = document.getElementById("saveState");
+      state.textContent = "Jawaban tersimpan di browser.";
+    }
+
+    function restoreAnswers() {
+      const raw = localStorage.getItem(saveKey);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        Object.entries(data).forEach(([id, value]) => {
+          const input = document.getElementById(id);
+          if (input && input.matches("input, textarea, select")) {
+            input.value = value;
+          }
+        });
+        if (Array.isArray(data.workQ)) {
+          workQ = data.workQ;
+          buildReadonlyMatrix("workQMatrix", workQ);
+        }
+      } catch (error) {
+        localStorage.removeItem(saveKey);
+      }
+    }
+
+    function downloadAnswers() {
+      const data = collectAnswers();
+      data.downloadedAt = new Date().toISOString();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const name = (document.getElementById("studentName").value || "mahasiswa").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase();
+      link.href = url;
+      link.download = "jawaban-q-learning-" + name + ".json";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function resetAll() {
+      const ok = confirm("Reset semua jawaban di halaman ini?");
+      if (!ok) return;
+      localStorage.removeItem(saveKey);
+      document.querySelectorAll("input, textarea").forEach((input) => {
+        if (input.id === "playGamma") {
+          input.value = "0.8";
+        } else {
+          input.value = "";
+        }
+      });
+      document.getElementById("currentState").value = "4";
+      document.getElementById("actionState").value = "5";
+      workQ = createZeroMatrix();
+      lastCandidate = null;
+      buildReadonlyMatrix("workQMatrix", workQ);
+      document.getElementById("playResult").textContent = "Pilih state dan action, lalu hitung satu langkah Q-Learning.";
+      document.getElementById("scoreValue").textContent = "0/0";
+      clearMarks();
+    }
+
+    function bindEvents() {
+      document.addEventListener("input", (event) => {
+        if (event.target.matches("[data-save], #playGamma, #currentState, #actionState")) {
+          saveAnswers();
+        }
+      });
+      document.getElementById("checkAll").addEventListener("click", checkAllAnswers);
+      document.getElementById("fillQZero").addEventListener("click", () => fillMatrix("q0", 0));
+      document.getElementById("clearQInitial").addEventListener("click", () => clearMatrix("q0"));
+      document.getElementById("clearR").addEventListener("click", () => clearMatrix("r"));
+      document.getElementById("calculateStep").addEventListener("click", calculateCandidate);
+      document.getElementById("applyStep").addEventListener("click", applyCandidate);
+      document.getElementById("resetWorkQ").addEventListener("click", () => {
+        workQ = createZeroMatrix();
+        lastCandidate = null;
+        buildReadonlyMatrix("workQMatrix", workQ);
+        document.getElementById("playResult").textContent = "Q kerja sudah direset ke nol.";
+        saveAnswers();
+      });
+      document.getElementById("downloadAnswers").addEventListener("click", downloadAnswers);
+      document.getElementById("printPage").addEventListener("click", () => window.print());
+      document.getElementById("resetAll").addEventListener("click", resetAll);
+    }
+
+    buildEditableMatrix("rewardMatrix", "r", expectedR);
+    buildEditableMatrix("qInitialMatrix", "q0", createZeroMatrix());
+    buildReadonlyMatrix("workQMatrix", workQ);
+    buildEpisodeRows();
+    buildCalculationDetails();
+    buildQStageMatrices();
+    buildStateOptions();
+    restoreAnswers();
+    bindEvents();
+  </script>
+</body>
+</html>
