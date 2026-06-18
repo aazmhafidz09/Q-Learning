@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Halaman Jawaban Q-Learning</title>
+  <style>
+    :root {
+      --ink: #132238;
+      --muted: #5d6b7a;
+      --line: #d8e0e8;
+      --paper: #f7fafc;
+      --panel: #ffffff;
+      --blue: #0b5d8e;
+      --blue-soft: #e6f3fb;
+      --green: #17815f;
+      --amber: #f6b739;
+      --shadow: 0 10px 28px rgba(19, 34, 56, 0.08);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, #eef7fb 0, rgba(238, 247, 251, 0) 320px),
+        var(--paper);
+      line-height: 1.5;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 4px solid var(--blue);
+    }
+
+    .topbar,
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      padding: 26px 0 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--blue);
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    main {
+      display: grid;
+      gap: 18px;
+      padding: 28px 0 44px;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      letter-spacing: 0;
+      color: #27445f;
+    }
+
+    p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 1px solid #bcd6e7;
+      border-radius: 6px;
+      background: var(--blue-soft);
+      color: #27445f;
+      font-weight: 800;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button,
+    a.button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 9px 13px;
+      background: var(--blue);
+      color: #ffffff;
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    a.button.secondary,
+    button.secondary {
+      background: #ffffff;
+      color: var(--blue);
+      border-color: #a7bdd0;
+    }
+
+    .matrix-shell {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #e2e9ef;
+      text-align: center;
+      padding: 8px;
+      min-width: 56px;
+    }
+
+    th {
+      background: #edf5fa;
+      color: #27445f;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    td:first-child,
+    th:first-child {
+      font-weight: 800;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .calc-list,
+    .stage-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .calc-card,
+    .stage-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .calc-card h3,
+    .stage-card h3 {
+      margin: 0;
+      padding: 13px 15px;
+      background: #edf5fa;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .calc-body {
+      padding: 14px 15px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .formula {
+      border-left: 4px solid var(--blue);
+      background: #f3f8fc;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 12px;
+      color: #27445f;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .stage-note {
+      margin: 0;
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stage-card .matrix-shell {
+      border: 0;
+      border-radius: 0;
+    }
+
+    .updated {
+      background: #fff4d8;
+      color: #7b5200;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 2px rgba(246, 183, 57, 0.45);
+    }
+
+    .short-answer {
+      border: 1px solid #d6e2ec;
+      border-radius: var(--radius);
+      background: #f8fbfd;
+      padding: 14px;
+    }
+
+    .short-answer strong {
+      color: var(--green);
+    }
+
+    @media (max-width: 820px) {
+      .topbar {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .answer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 18px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .toolbar {
+        display: none;
+      }
+
+      section {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <h1>Kunci Jawaban Q-Learning</h1>
+        <p class="subtitle">Halaman ini berisi jawaban lengkap untuk playground soal Q-Learning: parameter, matriks reward, update Q, cara hitung, dan matriks hasil tiap langkah.</p>
+      </div>
+      <div class="toolbar">
+        <a class="button secondary" href="q-learning-playground.html">Buka Soal</a>
+        <button type="button" onclick="window.print()">Cetak Jawaban</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Bagian A: Parameter</h2>
+      <p>Nilai gamma yang digunakan pada latihan ini:</p>
+      <span class="badge">gamma = 0.8</span>
+    </section>
+
+    <section>
+      <h2>Bagian B: Matriks Reward R</h2>
+      <p>Baris adalah current state, kolom adalah action atau next state.</p>
+      <div class="matrix-shell" id="rewardMatrix"></div>
+    </section>
+
+    <section>
+      <h2>Bagian C: Matriks Q Awal</h2>
+      <p>Sebelum proses update, semua nilai Q bernilai 0.</p>
+      <div class="matrix-shell" id="qInitialMatrix"></div>
+    </section>
+
+    <section>
+      <h2>Bagian D: Hitung Update Q</h2>
+      <p>Hasil isian tabel update Q:</p>
+      <div class="matrix-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Langkah</th>
+              <th>State</th>
+              <th>Action</th>
+              <th>Next state</th>
+              <th>Reward</th>
+              <th>Max Q next</th>
+              <th>Q baru</th>
+            </tr>
+          </thead>
+          <tbody id="episodeTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Bagian E: Cara Hitung Tiap Langkah</h2>
+      <div class="calc-list" id="calculationList"></div>
+    </section>
+
+    <section>
+      <h2>Bagian F: Matriks Q Hasil Update</h2>
+      <p>Sel kuning menunjukkan nilai Q yang baru berubah pada langkah tersebut.</p>
+      <div class="stage-list" id="qStageMatrices"></div>
+    </section>
+
+    <section>
+      <h2>Bagian G: Jawaban Singkat</h2>
+      <div class="answer-grid">
+        <div class="short-answer">
+          <h3>1. Mengapa max Q dari next state dibutuhkan?</h3>
+          <p><strong>Jawaban:</strong> Max Q dari next state digunakan untuk memperkirakan nilai terbaik yang bisa didapat setelah agen berpindah ke state berikutnya. Dengan begitu, update Q tidak hanya melihat reward saat ini, tetapi juga potensi reward masa depan.</p>
+        </div>
+        <div class="short-answer">
+          <h3>2. Jika gamma makin besar, apa dampaknya?</h3>
+          <p><strong>Jawaban:</strong> Jika gamma makin besar, agen semakin mempertimbangkan reward masa depan. Nilai Q akan lebih dipengaruhi oleh peluang mendapatkan reward besar pada langkah berikutnya, bukan hanya reward langsung.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const size = 6;
+    const gamma = 0.8;
+    const rewardMatrix = [
+      [-1, -1, -1, -1, 0, -1],
+      [-1, -1, -1, 0, -1, 100],
+      [-1, -1, -1, 0, -1, -1],
+      [-1, 0, 0, -1, 0, -1],
+      [0, -1, -1, 0, -1, 100],
+      [-1, 0, -1, -1, 0, 100]
+    ];
+    const episode = [
+      { label: "1", state: 5, action: 5, next: 5, reward: 100, maxQ: 0, qNew: 100 },
+      { label: "2", state: 4, action: 5, next: 5, reward: 100, maxQ: 100, qNew: 180 },
+      { label: "3", state: 3, action: 4, next: 4, reward: 0, maxQ: 180, qNew: 144 },
+      { label: "4", state: 1, action: 3, next: 3, reward: 0, maxQ: 144, qNew: 115.2 },
+      { label: "5", state: 2, action: 3, next: 3, reward: 0, maxQ: 144, qNew: 115.2 }
+    ];
+
+    function createZeroMatrix() {
+      return Array.from({ length: size }, () => Array(size).fill(0));
+    }
+
+    function cloneMatrix(matrix) {
+      return matrix.map((row) => row.slice());
+    }
+
+    function formatNumber(value) {
+      const rounded = Math.round(value * 100) / 100;
+      return String(rounded);
+    }
+
+    function buildMatrix(containerId, matrix, updatedCell) {
+      const container = document.getElementById(containerId);
+      const table = buildMatrixTable(matrix, updatedCell);
+      container.replaceChildren(table);
+    }
+
+    function buildMatrixTable(matrix, updatedCell) {
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const header = document.createElement("tr");
+      header.appendChild(document.createElement("th"));
+      for (let c = 0; c < size; c += 1) {
+        const th = document.createElement("th");
+        th.textContent = "A" + c;
+        header.appendChild(th);
+      }
+      thead.appendChild(header);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      for (let r = 0; r < size; r += 1) {
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.textContent = "S" + r;
+        tr.appendChild(th);
+        for (let c = 0; c < size; c += 1) {
+          const td = document.createElement("td");
+          td.textContent = formatNumber(matrix[r][c]);
+          if (updatedCell && updatedCell.row === r && updatedCell.col === c) {
+            td.classList.add("updated");
+          }
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      return table;
+    }
+
+    function getStages() {
+      const matrix = createZeroMatrix();
+      return episode.map((step) => {
+        const maxQ = Math.max(...matrix[step.next]);
+        const qNew = step.reward + gamma * maxQ;
+        matrix[step.state][step.action] = qNew;
+        return {
+          ...step,
+          maxQ,
+          qNew,
+          matrix: cloneMatrix(matrix),
+          updatedCell: { row: step.state, col: step.action }
+        };
+      });
+    }
+
+    function buildEpisodeTable() {
+      const tbody = document.getElementById("episodeTable");
+      tbody.replaceChildren();
+      episode.forEach((step) => {
+        const tr = document.createElement("tr");
+        [step.label, step.state, step.action, step.next, step.reward, step.maxQ, step.qNew].forEach((value) => {
+          const td = document.createElement("td");
+          td.textContent = formatNumber(Number(value));
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function buildCalculations() {
+      const container = document.getElementById("calculationList");
+      container.replaceChildren();
+      getStages().forEach((step) => {
+        const card = document.createElement("article");
+        card.className = "calc-card";
+
+        const title = document.createElement("h3");
+        title.textContent = "Langkah " + step.label + ": Q(" + step.state + "," + step.action + ")";
+
+        const body = document.createElement("div");
+        body.className = "calc-body";
+
+        const line1 = document.createElement("div");
+        line1.className = "formula";
+        line1.textContent = "Q(" + step.state + "," + step.action + ") = R(" + step.state + "," + step.action + ") + gamma * max Q(S" + step.next + ")";
+
+        const line2 = document.createElement("div");
+        line2.className = "formula";
+        line2.textContent = "Q(" + step.state + "," + step.action + ") = " + formatNumber(step.reward) + " + 0.8 * " + formatNumber(step.maxQ);
+
+        const line3 = document.createElement("div");
+        line3.className = "formula";
+        line3.textContent = "Q(" + step.state + "," + step.action + ") = " + formatNumber(step.qNew);
+
+        body.append(line1, line2, line3);
+        card.append(title, body);
+        container.appendChild(card);
+      });
+    }
+
+    function buildStageMatrices() {
+      const container = document.getElementById("qStageMatrices");
+      container.replaceChildren();
+
+      const initialCard = document.createElement("article");
+      initialCard.className = "stage-card";
+      const initialTitle = document.createElement("h3");
+      initialTitle.textContent = "Q Awal";
+      const initialNote = document.createElement("p");
+      initialNote.className = "stage-note";
+      initialNote.textContent = "Semua nilai Q bernilai 0.";
+      const initialShell = document.createElement("div");
+      initialShell.className = "matrix-shell";
+      initialShell.appendChild(buildMatrixTable(createZeroMatrix()));
+      initialCard.append(initialTitle, initialNote, initialShell);
+      container.appendChild(initialCard);
+
+      getStages().forEach((step) => {
+        const card = document.createElement("article");
+        card.className = "stage-card";
+        const title = document.createElement("h3");
+        title.textContent = "Setelah Langkah " + step.label;
+        const note = document.createElement("p");
+        note.className = "stage-note";
+        note.textContent = "Update: Q(" + step.state + "," + step.action + ") = " + formatNumber(step.qNew) + ".";
+        const shell = document.createElement("div");
+        shell.className = "matrix-shell";
+        shell.appendChild(buildMatrixTable(step.matrix, step.updatedCell));
+        card.append(title, note, shell);
+        container.appendChild(card);
+      });
+    }
+
+    buildMatrix("rewardMatrix", rewardMatrix);
+    buildMatrix("qInitialMatrix", createZeroMatrix());
+    buildEpisodeTable();
+    buildCalculations();
+    buildStageMatrices();
+  </script>
+</body>
+</html>
